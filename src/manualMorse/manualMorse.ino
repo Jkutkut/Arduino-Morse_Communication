@@ -1,4 +1,4 @@
-#define BTN 5
+#define IR_SENSOR 7
 #define LED 8
 
 #define ON 1
@@ -6,7 +6,8 @@
 
 void setup() {
   Serial.begin(9600);
-  pinMode(BTN, INPUT);
+  Serial.println("INITIALIZING");
+  pinMode(IR_SENSOR, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(LED, OUTPUT);
 }
@@ -23,15 +24,17 @@ void set_off() {
 
 void loop() {
   static int current = OFF;
-  int actual = digitalRead(BTN);
+  int actual = digitalRead(IR_SENSOR);
+  Serial.print("IR: ");
+  Serial.println(actual);
 
-  if (actual != current) {
-    current = actual;
-    Serial.println(actual);
-    if (actual == ON)
-      set_on();
-    else
-      set_off();
-  }
-  delay(40);
+  delay(300);
+  // if (actual != current) {
+  //   current = actual;
+  //   Serial.println(actual);
+  //   if (actual == ON)
+  //     set_on();
+  //   else
+  //     set_off();
+  // }
 }
