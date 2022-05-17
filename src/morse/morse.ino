@@ -1,11 +1,8 @@
 #define UNIT_TIME 200
 #define DEBUG_LIGHT 0
 
-#define SENDER 0
-#define RECEIVER 1
-
 #define LED 8
-// #define SENSOR A0
+#define SENSOR A0
 
 /* * MORSE LOGIC * */
 
@@ -123,14 +120,30 @@ int stomorse(const char *str)
 
 int mode;
 
+// SENDER MODE
+#define SENDER 0
+#define BUFER_SIZE 256
+char senderBuffer[BUFER_SIZE];
+
+
+// RECEIVER MODE
+#define RECEIVER 1
+#define A 1000 // Resistencia en oscuridad en KOhm
+#define B 15 // Resistencia a la luz (10 lux) en KOhm
+#define RC 10 // Resistencia calibración en KOhm
+int readLight() {
+  int v = analogRead(SENSOR);
+  return ((long) v * A * 10) / ((long) B * RC * (1024 - v));
+}
+
 void setup() {
 	Serial.begin(9600);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(LED, OUTPUT);
-  pinMode(A0, INPUT);
+  pinMode(SENSOR, INPUT);
 
-  mode = SENDER;
-  // mode = RECEIVER;
+  // mode = SENDER;
+  mode = RECEIVER;
 
   switch (mode)
   {
@@ -146,27 +159,15 @@ void setup() {
   }
 }
 
-#define A 1000 // Resistencia en oscuridad en KOhm
-#define B 15 // Resistencia a la luz (10 lux) en KOhm
-#define RC 10 // Resistencia calibración en KOhm
-int readLight() {
-  int v = analogRead(A0);
-  return ((long) v * A * 10) / ((long) B * RC * (1024 - v));
-}
-
-int readResult;
-
 void loop() {
   switch (mode)
   {
   case SENDER:
-    if (Serial.available())
-    {
-      char c[50];
-      Serial.readString().toCharArray(c, 50);
+    if (Serial.available()) {
+      Serial.readString().toCharArray(senderBuffer, BUFER_SIZE);
       Serial.print("Sending: ");
-      Serial.print(c);
-      if (stomorse(c))
+      Serial.print(senderBuffer);
+      if (stomorse(senderBuffer))
         Serial.println("[OK]");
       else
         Serial.println("[ERROR]");
@@ -174,9 +175,8 @@ void loop() {
     break;
   case RECEIVER:
     // Serial.println("Receiver mode");
-    readResult = analogRead(A0);
     // Serial.print("Input: ");
-    Serial.println(readResult);
+    Serial.println(readLight());
     delay(100);
     return;
   default:
