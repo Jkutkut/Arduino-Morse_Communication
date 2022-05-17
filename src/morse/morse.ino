@@ -1,6 +1,10 @@
 #define UNIT_TIME 200
 
+#define SENDER 0
+#define RECEIVER 1
+
 #define LED 8
+// #define SENSOR A0
 
 /* * MORSE LOGIC * */
 
@@ -109,13 +113,44 @@ void stomorse(const char *str)
   }
 }
 
+/* * CODE * */
+
+int mode;
 
 void setup() {
+	Serial.begin(9600);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(LED, OUTPUT);
+  pinMode(A0, INPUT);
+
+  mode = RECEIVER;
 }
 
+int readResult;
+
 void loop() {
-  stomorse("SOS");
+  switch (mode)
+  {
+  case SENDER:
+    Serial.println("Sender mode");
+    if (Serial.available())
+    {
+      char c = Serial.read();
+      Serial.print("Sending: ");
+      Serial.println(c);
+      stomorse(&c);
+    }
+    break;
+  case RECEIVER:
+    // Serial.println("Receiver mode");
+    readResult = analogRead(A0);
+    // Serial.print("Input: ");
+    Serial.println(readResult);
+    delay(100);
+    return;
+  default:
+    Serial.println("Unknown mode");
+    break;
+  }
   delay(1000);
 }
