@@ -1,4 +1,5 @@
 #define UNIT_TIME 200
+#define DEBUG_LIGHT 0
 
 #define SENDER 0
 #define RECEIVER 1
@@ -41,12 +42,14 @@ const char *morseValue[] = {
 };
 
 void set_on() {
-  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  if (DEBUG_LIGHT)
+    digitalWrite(LED_BUILTIN, HIGH);
   digitalWrite(LED, HIGH);
 }
 
 void set_off() {
-  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  if (DEBUG_LIGHT)
+    digitalWrite(LED_BUILTIN, LOW);
   digitalWrite(LED, LOW);
 }
 
@@ -124,6 +127,14 @@ void setup() {
   pinMode(A0, INPUT);
 
   mode = RECEIVER;
+}
+
+#define A 1000 // Resistencia en oscuridad en KOhm
+#define B 15 // Resistencia a la luz (10 lux) en KOhm
+#define RC 10 // Resistencia calibración en KOhm
+int readLight() {
+  int v = analogRead(A0);
+  return ((long) v * A * 10) / ((long) B * RC * (1024 - v));
 }
 
 int readResult;
