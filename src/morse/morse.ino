@@ -103,17 +103,20 @@ void morse(const char *str)
  * 
  * @param str Message to output.
  */
-void stomorse(const char *str)
+int stomorse(const char *str)
 {
   int i;
-  while (*str)
+  while (*str && *str != '\n')
   {
     i = 0;
-    while (morseKey[i] != *str)
+    while (morseKey[i] && morseKey[i] != *str)
       i++;
+    if (!morseKey[i])
+      return 0;
     morse(morseValue[i]);
     str++;
   }
+  return 1;
 }
 
 /* * CODE * */
@@ -126,7 +129,21 @@ void setup() {
   pinMode(LED, OUTPUT);
   pinMode(A0, INPUT);
 
-  mode = RECEIVER;
+  mode = SENDER;
+  // mode = RECEIVER;
+
+  switch (mode)
+  {
+  case SENDER:
+    Serial.println("Sender mode");
+    break;
+  case RECEIVER:
+    Serial.println("Receiver mode");
+    break;
+  default:
+    Serial.println("Unknown mode");
+    break;
+  }
 }
 
 #define A 1000 // Resistencia en oscuridad en KOhm
@@ -143,13 +160,16 @@ void loop() {
   switch (mode)
   {
   case SENDER:
-    Serial.println("Sender mode");
     if (Serial.available())
     {
-      char c = Serial.read();
+      char c[50];
+      Serial.readString().toCharArray(c, 50);
       Serial.print("Sending: ");
-      Serial.println(c);
-      stomorse(&c);
+      Serial.print(c);
+      if (stomorse(c))
+        Serial.println("[OK]");
+      else
+        Serial.println("[ERROR]");
     }
     break;
   case RECEIVER:
@@ -160,8 +180,9 @@ void loop() {
     delay(100);
     return;
   default:
-    Serial.println("Unknown mode");
+    Serial.println("Please select a mode");
+    delay(10000);
     break;
   }
-  delay(1000);
+  delay(40);
 }
