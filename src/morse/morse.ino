@@ -2,6 +2,8 @@
 
 #define LED 8
 
+/* * MORSE LOGIC * */
+
 const char *morseKey = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 const char *morseValue[] = {
@@ -35,12 +37,12 @@ const char *morseValue[] = {
 };
 
 void set_on() {
-   digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
   digitalWrite(LED, HIGH);
 }
 
 void set_off() {
-   digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
   digitalWrite(LED, LOW);
 }
 
@@ -67,10 +69,14 @@ void line()
 
 void space()
 {
-//  wait(5);
-  wait(3);
+  wait(3); // 3 dots + 2 spaces on the sides
 }
 
+/**
+ * @brief Outputs the given morse character (string) using the Light system.
+ * 
+ * @param str Morse string to output.
+ */
 void morse(const char *str)
 {
   while (*str)
@@ -85,6 +91,11 @@ void morse(const char *str)
   }
 }
 
+/**
+ * @brief Outputs the given string using the Light system.
+ * 
+ * @param str Message to output.
+ */
 void stomorse(const char *str)
 {
   int i;
@@ -99,16 +110,12 @@ void stomorse(const char *str)
 }
 
 
-// the setup function runs once when you press reset or power the board
 void setup() {
-  // initialize digital pin LED_BUILTIN as an output.
-   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(LED, OUTPUT);
 }
 
-// the loop function runs over and over again forever
 void loop() {
-  // stomorse("SOS");
-  stomorse("ESTAMOS EN CLASE DE IOT");
-  delay(1000);                       // wait for a second
+  stomorse("SOS");
+  delay(1000);
 }
