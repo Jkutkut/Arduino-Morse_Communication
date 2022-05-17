@@ -131,10 +131,20 @@ char senderBuffer[BUFER_SIZE];
 #define A 1000 // Resistencia en oscuridad en KOhm
 #define B 15 // Resistencia a la luz (10 lux) en KOhm
 #define RC 10 // Resistencia calibración en KOhm
+
 int readLight() {
   int v = analogRead(SENSOR);
   return ((long) v * A * 10) / ((long) B * RC * (1024 - v));
 }
+
+#define N_SAMPLES 20
+void aproxAverage(int *avg, int sample)
+{
+  *avg -= avg / N_SAMPLES;
+  *avg += sample / N_SAMPLES;
+}
+
+// CODE LOGIC
 
 void setup() {
 	Serial.begin(9600);
@@ -159,6 +169,10 @@ void setup() {
   }
 }
 
+int i = 0;
+int avgON = 0;
+int avgOFF = 0;
+
 void loop() {
   switch (mode)
   {
@@ -178,6 +192,18 @@ void loop() {
     // Serial.print("Input: ");
     Serial.println(readLight());
     delay(100);
+    if (i++ == N_SAMPLES)
+      set_on();
+    if (i == N_SAMPLES * 2)
+    {
+      set_off();
+      i = 0;
+    }
+    if (i < 20)
+      aproxAverage(&avgOFF, readLight());
+    else
+      aproxAverage(&avgON, readLight());
+
     return;
   default:
     Serial.println("Please select a mode");
