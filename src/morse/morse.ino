@@ -122,8 +122,8 @@ int mode;
 
 // SENDER MODE
 #define SENDER 0
-#define BUFER_SIZE 256
-char senderBuffer[BUFER_SIZE];
+#define BUFFER_SIZE 256
+char senderBuffer[BUFFER_SIZE];
 
 
 // RECEIVER MODE
@@ -131,6 +131,13 @@ char senderBuffer[BUFER_SIZE];
 #define A 1000 // Resistencia en oscuridad en KOhm
 #define B 15 // Resistencia a la luz (10 lux) en KOhm
 #define RC 10 // Resistencia calibración en KOhm
+
+int i = 0;
+int avgON = 0;
+int avgOFF = 0;
+int light;
+
+char receiverBuffer[BUFFER_SIZE * 7];
 
 int readLight() {
   int v = analogRead(SENSOR);
@@ -140,8 +147,12 @@ int readLight() {
 #define N_SAMPLES 20
 void aproxAverage(int *avg, int sample)
 {
-  *avg -= avg / N_SAMPLES;
+  *avg -= *avg / N_SAMPLES;
   *avg += sample / N_SAMPLES;
+}
+
+int readMessage() {
+  return (1);
 }
 
 // CODE LOGIC
@@ -161,6 +172,12 @@ void setup() {
     Serial.println("Sender mode");
     break;
   case RECEIVER:
+    avgOFF = readLight();
+    for (int i = 0; i < 5; i++) {
+      aproxAverage(&avgOFF, readLight());
+      delay(100);
+    }
+    
     Serial.println("Receiver mode");
     break;
   default:
@@ -169,16 +186,12 @@ void setup() {
   }
 }
 
-int i = 0;
-int avgON = 0;
-int avgOFF = 0;
-
 void loop() {
   switch (mode)
   {
   case SENDER:
     if (Serial.available()) {
-      Serial.readString().toCharArray(senderBuffer, BUFER_SIZE);
+      Serial.readString().toCharArray(senderBuffer, BUFFER_SIZE);
       Serial.print("Sending: ");
       Serial.print(senderBuffer);
       if (stomorse(senderBuffer))
@@ -190,21 +203,23 @@ void loop() {
   case RECEIVER:
     // Serial.println("Receiver mode");
     // Serial.print("Input: ");
-    Serial.println(readLight());
-    delay(100);
-    if (i++ == N_SAMPLES)
-      set_on();
-    if (i == N_SAMPLES * 2)
-    {
-      set_off();
-      i = 0;
+    light = readLight();
+    if (light > avgOFF + 150) {
+      avgON = light;
+      Serial.println("[READING]");
+      if (readMessage()) {
+        Serial.println("[OK]");
+        delay(2000);
+        return;
+      }
+      else
+        Serial.println("[ERROR]");
     }
-    if (i < 20)
-      aproxAverage(&avgOFF, readLight());
     else
-      aproxAverage(&avgON, readLight());
+      aproxAverage(&avgOFF, light);
 
-    return;
+    Serial.println(readLight());
+    break;
   default:
     Serial.println("Please select a mode");
     delay(10000);
