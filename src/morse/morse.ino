@@ -128,6 +128,7 @@ char senderBuffer[BUFFER_SIZE];
 
 // RECEIVER MODE
 #define RECEIVER 1
+#define RECEIVER_BUFFER_SIZE (BUFFER_SIZE * 7)
 #define A 1000 // Resistencia en oscuridad en KOhm
 #define B 15 // Resistencia a la luz (10 lux) en KOhm
 #define RC 10 // Resistencia calibración en KOhm
@@ -137,7 +138,7 @@ int avgON = 0;
 int avgOFF = 0;
 int light;
 
-char receiverBuffer[BUFFER_SIZE * 7];
+char receiverBuffer[RECEIVER_BUFFER_SIZE];
 
 int readLight() {
   int v = analogRead(SENSOR);
@@ -151,8 +152,67 @@ void aproxAverage(int *avg, int sample)
   *avg += sample / N_SAMPLES;
 }
 
-int readMessage() {
+int translate() {
+  if (receiverBuffer[0] != '.')
+    return (0);
+
+  i = 0;
+  int index = 0;
+  int consecutiveDots = 0;
+  int consecutiveSpaces = 0;
+  while (i < RECEIVER_BUFFER_SIZE) {
+    if (receiverBuffer[i] == ' ') { // If no light
+      consecutiveSpaces++; // Update consecutive spaces
+      if (consecutiveSpaces == 8) // If msg ended
+        break;
+      if (consecutiveDots == 3) { // If line
+        // TODO
+      }
+      else if (consecutiveDots == 1) { // If dot
+        // TODO
+      }
+      consecutiveDots = 0; // Reset consecutive dots
+    }
+    else { // If light
+      consecutiveDots++; // Update consecutive dots
+      if (consecutiveDots == 4) // If invalid msg
+        return (0);
+      if (consecutiveSpaces == 5) { // If space
+        // TODO
+      }
+      consecutiveSpaces = 0; // Reset consecutive spaces
+    }
+  }
+
   return (1);
+}
+
+int readMessage() {
+  int deltaOFF;
+  int deltaON;
+  i = 0;
+  wait(1);
+
+  while (i < RECEIVER_BUFFER_SIZE) {
+    light = readLight();
+
+    deltaOFF = abs(avgOFF - light);
+    deltaON = abs(avgON - light);
+
+    if (deltaOFF < deltaON) {
+      receiverBuffer[i] = ' ';
+      aproxAverage(&avgOFF, light);
+    }
+    else {
+      receiverBuffer[i] = '.';
+      aproxAverage(&avgON, light);
+    }
+
+    i++;
+    wait(1);
+  }
+
+  return translate();
 }
 
 // CODE LOGIC
